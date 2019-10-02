@@ -19,14 +19,15 @@ $ pip install python-twitter
 
 import time
 import twitter #for docs, see https://python-twitter.readthedocs.io/en/latest/twitter.html
+import config
 
 def twitter_demo():
     # connect to api with apikeys
     # if you don't have apikeys, go to apps.twitter.com
-    api = twitter.Api(consumer_key='twitter consumer key',
-                      consumer_secret='twitter consumer secret',
-                      access_token_key='twitter access token key',
-                      access_token_secret='twitter access token secret')
+    api = twitter.Api(consumer_key=api_key,
+                      consumer_secret=api_secret,
+                      access_token_key=access_token,
+                      access_token_secret=token_secret)
 
     # get followers
     print("Getting a list of accounts I follow on Twitter...")
