@@ -19,7 +19,8 @@ $ pip install python-twitter
 
 import time
 import twitter #for docs, see https://python-twitter.readthedocs.io/en/latest/twitter.html
-import config
+
+from config import *
 
 def twitter_demo():
     # connect to api with apikeys
@@ -42,7 +43,7 @@ def twitter_demo():
     followers_ids = [user.id for user in followers]
     for follower in followers:
         print("Follower: ", follower.name, follower.screen_name, follower.id)
-
+'''
     # look up the user_id of a single user
     print("Looking up the details of screenname @jd7h...")
     print(api.UsersLookup(screen_name=["jd7h"]))
@@ -77,4 +78,6 @@ def twitter_demo():
     for friend_id in friend_ids:
       print("Adding ", friend_id)
       result = api.CreateListsMember(list_id=mylist.id,user_id=friend_id)
-      
+'''    
+
+twitter_demo()  
