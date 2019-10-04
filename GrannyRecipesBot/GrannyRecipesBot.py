@@ -6,93 +6,116 @@ fill in your API keys before running the script
 written in Python3 by Judith van Stegeren, @jd7h
 '''
 
-'''
-before running the script, do this:
-1. create a virtual environment
-$ python -m venv venv
-$ source venv/bin/activate
-2. install the dependencies
-$ pip install python-twitter
-3. obtain API keys from twitter
-4. fill them in in the script below
-'''
-
+from random import randrange
 import time
+import json
 import twitter #for docs, see https://python-twitter.readthedocs.io/en/latest/twitter.html
 import spoonacular as sp
 
 from config import *
+# connect to api with apikeys
+# if you don't have apikeys, go to apps.twitter.com
+api = twitter.Api(consumer_key=api_key,
+                    consumer_secret=api_secret,
+                    access_token_key=access_token,
+                    access_token_secret=token_secret)
+sp_api = sp.API(spoonacular_key)
 
-def twitter_demo():
-    # connect to api with apikeys
-    # if you don't have apikeys, go to apps.twitter.com
-    api = twitter.Api(consumer_key=api_key,
-                      consumer_secret=api_secret,
-                      access_token_key=access_token,
-                      access_token_secret=token_secret)
-    sp_api = sp.API(spoonacular_key)
-
-    # testing the spoonacular API
-    response = sp_api.detect_food_in_text("3.5 cups King Arthur flour, milk and some eggs I guess")
+# Detect the food mentions in the tweet
+def detectFoodInTweet(tweet):
+    response = sp_api.detect_food_in_text(tweet)
     data = response.json()
-    for annotation in data['annotations']:
-        print(annotation['annotation'], annotation['tag'])
+    return data["annotations"]
 
-'''
-    # Get tweet by mentions
-    mentions = api.GetMentions()
-    print(mentions)
-    for mention in mentions:
-        print("Mention text: ", mention.text)
+def getRecipeDetails(json_recipe):
+    return [json_recipe[0]['id'], json_recipe[0]['title'], json_recipe[0]['image']]
 
-    # get followers
-    print("Getting a list of accounts I follow on Twitter...")
-    friends = api.GetFriends()
-    friend_ids = [friend.id for friend in friends]
-    for friend in friends:
-        print("Friend: ", friend.name, friend.screen_name, friend.id)
-    
-    # get a list of accounts that are following me
-    print("Getting a list of followers from Twitter...")
-    followers = api.GetFollowers()
-    followers_ids = [user.id for user in followers]
-    for follower in followers:
-        print("Follower: ", follower.name, follower.screen_name, follower.id)
+# Return a recipe depending on the first detected food item
+def returnRecipe(food):
+    dishes = []
+    ingredients = []
+    for item in food:
+        if item['tag'] == "dish":
+            dishes.append(item)
+        elif item['tag'] == "ingredient":
+            ingredients.append(item['annotation'])
+    ingredients_string = ','.join(map(str, ingredients)) 
+    print(ingredients_string)
 
-    # look up the user_id of a single user
-    print("Looking up the details of screenname @jd7h...")
-    print(api.UsersLookup(screen_name=["jd7h"]))
+    if len(dishes) > 0:
+        print("found a dish!", dishes[0]['annotation'])
+        response = sp_api.search_recipes_complex(query = dishes[0]['annotation'], number = 1, includeIngredients = ingredients_string)
+        search_result = response.json()
+        return getRecipeDetails(search_result['results'])
+    elif len(ingredients) > 0:
+        response = sp_api.search_recipes_by_ingredients(ingredients = ingredients_string, number = 1)
+        search_result = response.json()
+        return getRecipeDetails(search_result)
+    else:
+        response = sp_api.get_random_recipes(number = 1).json()
+        search_result = response.json()
+        return getRecipeDetails(search_result)
 
-    print("Looking up the details of screenname @jd7h...")
-    print(api.UsersLookup(screen_name=["jd7h"]))
-    # this should output: [User(ID=222060384, ScreenName=jd7h)]
+# random dish response
+# in my day
+# I think it's fantasic, really
+# I wrote this recipe on paper, let me see. Ah yes, I got it
+# Super isn't it, really marvellous
+# deary me
 
-    #tweeting
-    body = "This is a tweet. Chirp chirp. Hello world!"
-    print("Posting tweet...")
-    result = api.PostUpdate(body)    
+#make haste and start now!
 
-    # mentions:
-    body = "@jd7h My Twitter bot is working!"
-    print("Posting tweet with mention...")
-    result = api.PostUpdate(body) # including the screenname (prepended by a '@') in the tweet-body is enough to create a mention.
+def grandmaSentences(number):
 
-    # replying to a tweet:
-    itech_tweet_id = 1178660081648492545 # tweet id of the tweet https://twitter.com/jd7h/status/1178660081648492545
-    body = "I ran your script without changing some of the input strings!"
+    sentences = [
+    ['header', 'Hello dear', 'Hello lovely' , 'Hello my dear,', 'Thanks for your message',],
+    ['randomReason',
+         'Hello?... My hearing aid is not working properly. ', 'Oops... deary me! I forgot my reading glasses.', 
+         'Yeah sorry... Didn\'t know you were talking to me. ', 'Back in my day, we did not use those ingredients. '],
+    ['randomIngredients', 'Could you repeat those ingredients for me darling?', 'What ingredients did you mention dear?',
+    'It would be marvellous if you can tell me those ingredients again, darling. Just one more time.'],    
+    ['closure', 'Tell me if you liked it!', 'Enjoy cooking!', 'Granny out.', 'Have a nice meal!', 'Bon Appetite!',
+     'Make haste and start now, so you can enjoy your marvellous meal sweetheart.'], 
+    ['foundrecipe', 'Granny recommends ', 'I would make ', 'You should try the ', 'You should definitely cook ', 'I wrote this one on paper, let me see. Ah '],
+    ]
+    return sentences[number][randrange(1, len(sentences[number]))]
+
+def createResponse(title):
+    response = ""
+    header = grandmaSentences(0)
+    foundRecipe = grandmaSentences(4)
+    closure = grandmaSentences(3)
+    response = header + "\n" + foundRecipe + title + "\n" + closure
+    return response
+
+def createRandomResponse(user):
+    response = ""
+    randomIngredients = grandmaSentences(2)
+    randomReason = grandmaSentences(1)
+    response = user + " " + randomReason + '\n' + randomIngredients
+    return response
+
+def tweetResponse(response, tweet_id):
     print("Posting reply...")
-    result = api.PostUpdate(body, in_reply_to_status_id=itech_tweet_id)
+    print("tweet id ", tweet_id)
+    print(response)
+    result = api.PostUpdate(response, in_reply_to_status_id=tweet_id, auto_populate_reply_metadata=True)
 
-    # other useful stuff:
-    # creating a private list
-    print("Creating a private list...")
-    mylist = api.CreateList(name="My beautiful list",mode="private",description=("A secret list I created on " + time.strftime("%Y-%m-%d")))
+# Get tweet by mentions
+mentions = api.GetMentions()
+print(mentions[0])
+createID = mentions[0].id
 
-    # Add all users from 'Following' to the new list
-    print("Adding friends to the newly created list...")
-    for friend_id in friend_ids:
-      print("Adding ", friend_id)
-      result = api.CreateListsMember(list_id=mylist.id,user_id=friend_id)
-'''    
+#for mention in mentions:
+print("Mention text: ", mentions[0].text)
 
-twitter_demo()  
+#play the demo, to be extended
+#for tweet in mentions:
+tweet = mentions[0]
+food_in_tweet = detectFoodInTweet(tweet)
+recipe = returnRecipe(food_in_tweet)
+print(recipe)
+
+
+tweetResponse(createResponse(recipe[1]), createID)
+#print(createRandomResponse())
