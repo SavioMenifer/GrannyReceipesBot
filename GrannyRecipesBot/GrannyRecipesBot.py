@@ -22,23 +22,44 @@ import twitter #for docs, see https://python-twitter.readthedocs.io/en/latest/tw
 import spoonacular as sp
 
 from config import *
+# connect to api with apikeys
+# if you don't have apikeys, go to apps.twitter.com
+api = twitter.Api(consumer_key=api_key,
+                    consumer_secret=api_secret,
+                    access_token_key=access_token,
+                    access_token_secret=token_secret)
+sp_api = sp.API(spoonacular_key)
+
+# Detect the food mentions in the tweet
+def detect_food_in_tweet(tweet)
+    response = sp_api.detect_food_in_text(tweet)
+    data = response.json()
+    return data["annotations"]
+
+# Return a recipe depending on the first detected food item
+def return_recipe(food):
+    if food[0].tag = "dish"
+        search_result = sp_api.search_recipes(query = food.annotation, number = 1)
+        return search_result.json()
+    elif food[0].tag = "ingredient"
+        ingredient_string = ""
+        for ingredient in food:
+            ingredient_string = ingredient_string + string(ingredient.annotation) + ","
+        search_result = sp_api.search_recipes_by_ingredients(ingredients = ingredient_string, number = 1)
+        return search_result.json()
+    else 
+        return sp_api.get_random_recipes(number = 1).json()
+    
 
 def twitter_demo():
-    # connect to api with apikeys
-    # if you don't have apikeys, go to apps.twitter.com
-    api = twitter.Api(consumer_key=api_key,
-                      consumer_secret=api_secret,
-                      access_token_key=access_token,
-                      access_token_secret=token_secret)
-    sp_api = sp.API(spoonacular_key)
-
+'''
     # testing the spoonacular API
     response = sp_api.detect_food_in_text("3.5 cups King Arthur flour, milk and some eggs I guess")
     data = response.json()
     for annotation in data['annotations']:
         print(annotation['annotation'], annotation['tag'])
-
 '''
+
     # Get tweet by mentions
     mentions = api.GetMentions()
     print(mentions)
@@ -93,6 +114,10 @@ def twitter_demo():
     for friend_id in friend_ids:
       print("Adding ", friend_id)
       result = api.CreateListsMember(list_id=mylist.id,user_id=friend_id)
-'''    
+
+    #play the demo, to be extended
+    for tweet in mentions:
+        food_in_tweet = detect_food_in_tweet(tweet)
+    
 
 twitter_demo()  
