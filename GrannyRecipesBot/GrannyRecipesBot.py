@@ -19,6 +19,7 @@ $ pip install python-twitter
 
 import time
 import twitter #for docs, see https://python-twitter.readthedocs.io/en/latest/twitter.html
+import spoonacular as sp
 
 from config import *
 
@@ -29,6 +30,20 @@ def twitter_demo():
                       consumer_secret=api_secret,
                       access_token_key=access_token,
                       access_token_secret=token_secret)
+    sp_api = sp.API(spoonacular_key)
+
+    # testing the spoonacular API
+    response = sp_api.detect_food_in_text("3.5 cups King Arthur flour, milk and some eggs I guess")
+    data = response.json()
+    for annotation in data['annotations']:
+        print(annotation['annotation'], annotation['tag'])
+
+'''
+    # Get tweet by mentions
+    mentions = api.GetMentions()
+    print(mentions)
+    for mention in mentions:
+        print("Mention text: ", mention.text)
 
     # get followers
     print("Getting a list of accounts I follow on Twitter...")
@@ -43,7 +58,7 @@ def twitter_demo():
     followers_ids = [user.id for user in followers]
     for follower in followers:
         print("Follower: ", follower.name, follower.screen_name, follower.id)
-'''
+
     # look up the user_id of a single user
     print("Looking up the details of screenname @jd7h...")
     print(api.UsersLookup(screen_name=["jd7h"]))

@@ -1,2 +1,5 @@
+.DS_Store
 GrannyRecipesBot/config.py
 venv/
+GrannyRecipesBot/__pycache__
+GrannyRecipesBot/.DS_Store
